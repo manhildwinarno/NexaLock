@@ -77,7 +77,7 @@ Administrators can push Over-The-Air firmware updates directly from the Flutter 
                                 └──────────┬───────────┘
                                            │ WSS
                                 ┌──────────▼───────────┐
-                                │   ESP32 NodeMCU      │
+                                │   ESP32 DevKit V1     │
                                 │   Firmware            │
                                 │                       │
                                 │  • MFRC522 RFID       │
@@ -114,7 +114,7 @@ Administrators can push Over-The-Air firmware updates directly from the Flutter 
 ### Hardware & Firmware
 | Component | Purpose |
 |---|---|
-| **ESP32 NodeMCU** | Main microcontroller |
+| **ESP32 DevKit V1** | Main microcontroller |
 | **Arduino C++** | Firmware language |
 | **MFRC522** | RFID/NFC card reader (SPI) |
 | **LiquidCrystal_I2C** | 16×2 LCD display (I2C) |
@@ -134,7 +134,7 @@ Administrators can push Over-The-Air firmware updates directly from the Flutter 
 | SCK | GPIO 18 |
 | MOSI | GPIO 23 |
 | MISO | GPIO 19 |
-| RST | GPIO 27 |
+| RST | GPIO 4 |
 | 3.3V | 3.3V |
 | GND | GND |
 
@@ -149,9 +149,8 @@ Administrators can push Over-The-Air firmware updates directly from the Flutter 
 ### Actuators
 | Component | ESP32 GPIO | Notes |
 |---|---|---|
-| **Relay Module** (Door Lock) | GPIO 26 | Active LOW — controls solenoid lock |
-| **Buzzer** | GPIO 25 | Access granted/denied audio feedback |
-| **Onboard LED** | GPIO 2 | Heartbeat status indicator |
+| **Relay Module** (Door Lock) | GPIO 32 | Active LOW — controls solenoid lock |
+| **Buzzer** | GPIO 27 | Access granted/denied audio feedback |
 
 ---
 
@@ -267,7 +266,7 @@ nexalock/
 
 ## 👥 Contributors
 
-- **Hilma** — Full-Stack Developer (Flutter + Firebase + ESP32 Firmware)
+- **Hilman** — Full-Stack Developer (Flutter + Firebase + ESP32 Firmware)
 
 ---
 
