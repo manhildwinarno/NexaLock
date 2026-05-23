@@ -1,9 +1,14 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide SearchBar;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../models/user_model.dart';
 import '../theme/app_theme.dart';
 import '../services/firestore_service.dart';
+import '../widgets/skeleton_loader.dart';
+import '../widgets/log_item_tile.dart';
+import '../widgets/group_header_widget.dart';
+import '../widgets/search_bar.dart';
+import '../widgets/empty_state.dart';
 
 /// Phase 3 Access History Screen — live Firestore stream
 class HistoryScreen extends StatefulWidget {
@@ -174,7 +179,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _SearchBar(controller: _searchController),
+              child: SearchBar(controller: _searchController),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -196,7 +201,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     stream: _getHistoryStream(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const _SkeletonLoader();
+                        return const SkeletonLoader();
                       }
                       if (snapshot.hasError) {
                         return Center(
@@ -222,13 +227,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         );
                       }
                       if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                        return const _EmptyState();
+                        return const EmptyState();
                       }
 
                       // Transform Firestore docs into display records
                       final logs = snapshot.data!.docs.map((doc) {
                         final data = doc.data() as Map<String, dynamic>;
-                        return _AccessLogEntry.fromFirestore(data, doc.id);
+                        return AccessLogEntry.fromFirestore(data, doc.id);
                       }).toList();
 
                       // Apply search filter and Dynamic Name Mapping
@@ -275,7 +280,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _GroupHeaderWidget(title: group.label),
+                                GroupHeaderWidget(title: group.label),
                                 const SizedBox(height: 12),
                                 Container(
                                   padding: const EdgeInsets.all(16),
@@ -295,7 +300,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                                       return Padding(
                                         padding: EdgeInsets.only(bottom: idx == group.items.length - 1 ? 0 : 8),
-                                        child: _LogItemTile(
+                                        child: LogItemTile(
                                           record: item,
                                           displayName: displayName,
                                           animationIndex: idx,
@@ -321,10 +326,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   /// Group flat log list into date-headed sections
-  List<_DateGroup> _groupByDate(List<_AccessLogEntry> logs) {
+  List<_DateGroup> _groupByDate(List<AccessLogEntry> logs) {
     final List<_DateGroup> result = [];
     String? lastDateLabel;
-    List<_AccessLogEntry> currentGroupItems = [];
+    List<AccessLogEntry> currentGroupItems = [];
 
     for (final log in logs) {
       final dateLabel = _formatDateLabel(log.timestamp);
@@ -360,7 +365,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 }
 
 /// Internal model for a Firestore access log entry
-class _AccessLogEntry {
+class AccessLogEntry {
   final String id;
   final String? uid;
   final String userName;
@@ -368,7 +373,7 @@ class _AccessLogEntry {
   final String status;
   final DateTime timestamp;
 
-  const _AccessLogEntry({
+  const AccessLogEntry({
     required this.id,
     this.uid,
     required this.userName,
@@ -377,7 +382,7 @@ class _AccessLogEntry {
     required this.timestamp,
   });
 
-  factory _AccessLogEntry.fromFirestore(Map<String, dynamic> data, String id) {
+  factory AccessLogEntry.fromFirestore(Map<String, dynamic> data, String id) {
     DateTime ts;
     final rawTs = data['timestamp'];
     if (rawTs is Timestamp) {
@@ -386,7 +391,7 @@ class _AccessLogEntry {
       ts = DateTime.now();
     }
 
-    return _AccessLogEntry(
+    return AccessLogEntry(
       id: id,
       uid: data['uid'] as String?,
       userName: data['user_name'] as String? ?? 'Unknown',
@@ -417,449 +422,19 @@ class _AccessLogEntry {
 /// Date group container
 class _DateGroup {
   final String label;
-  final List<_AccessLogEntry> items;
+  final List<AccessLogEntry> items;
   const _DateGroup(this.label, this.items);
 }
 
 /// Empty state widget with clean illustration
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
 
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceContainerLow,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.outlineVariant.withValues(alpha: 0.3)),
-              ),
-              child: const Icon(
-                Icons.history_rounded,
-                size: 36,
-                color: AppTheme.outline,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'No Access History',
-              style: TextStyle(
-                fontFamily: 'Hanken Grotesk',
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.primary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Access logs will appear here once the door is locked or unlocked via the app, RFID, or keypad.',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                color: AppTheme.onSurfaceVariant,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 /// Stylized search input layout
-class _SearchBar extends StatelessWidget {
-  final TextEditingController controller;
 
-  const _SearchBar({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceContainerLow.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const SizedBox(width: 16),
-          const Icon(Icons.search_rounded, color: AppTheme.outline, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                hintText: 'Search by name, method, or status...',
-                hintStyle: TextStyle(
-                  color: AppTheme.outline,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                ),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                fillColor: Colors.transparent,
-                contentPadding: EdgeInsets.zero,
-                isDense: true,
-              ),
-              style: const TextStyle(fontSize: 14, color: AppTheme.onSurface),
-            ),
-          ),
-          ValueListenableBuilder<TextEditingValue>(
-            valueListenable: controller,
-            builder: (context, value, child) {
-              if (value.text.isEmpty) return const SizedBox(width: 16);
-              return IconButton(
-                onPressed: () => controller.clear(),
-                icon: const Icon(Icons.close_rounded, color: AppTheme.outline, size: 20),
-                splashRadius: 20,
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 /// Date divider row
-class _GroupHeaderWidget extends StatelessWidget {
-  final String title;
 
-  const _GroupHeaderWidget({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: AppTheme.outlineVariant.withValues(alpha: 0.2),
-            width: 1,
-          ),
-        ),
-      ),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontFamily: 'Hanken Grotesk',
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: AppTheme.onSurface,
-        ),
-      ),
-    );
-  }
-}
 
 /// Individual access log record tile
-class _LogItemTile extends StatefulWidget {
-  final _AccessLogEntry record;
-  final String displayName;
-  final int animationIndex;
 
-  const _LogItemTile({
-    required this.record,
-    required this.displayName,
-    this.animationIndex = 0,
-  });
 
-  @override
-  State<_LogItemTile> createState() => _LogItemTileState();
-}
-
-class _LogItemTileState extends State<_LogItemTile> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fade;
-  late Animation<Offset> _slide;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 350),
-    );
-    _fade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
-    _slide = Tween<Offset>(begin: const Offset(0.1, 0), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
-
-    Future.delayed(Duration(milliseconds: 50 * widget.animationIndex.clamp(0, 10)), () {
-      if (mounted) _controller.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final record = widget.record;
-    final bool isWarning = record.isDenied || record.isError;
-    final Color mainColor = isWarning ? AppTheme.error : AppTheme.onSurface;
-    final Color subColor = isWarning ? AppTheme.error.withValues(alpha: 0.7) : AppTheme.outline;
-    
-    Color statusColor;
-    if (record.isSuccess) {
-      statusColor = AppTheme.success;
-    } else if (record.isError) {
-      statusColor = Colors.orange;
-    } else {
-      statusColor = AppTheme.error;
-    }
-
-    return FadeTransition(
-      opacity: _fade,
-      child: SlideTransition(
-        position: _slide,
-        child: Dismissible(
-          key: Key(record.id),
-          direction: DismissDirection.endToStart,
-          confirmDismiss: (direction) async {
-            return await _showDeleteConfirmation(context);
-          },
-          onDismissed: (direction) async {
-            try {
-              await FirestoreService().deleteHistoryEntry(record.id);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Icon(Icons.check_circle_outline, color: Colors.white),
-                        SizedBox(width: 12),
-                        Expanded(child: Text('Log entry deleted successfully')),
-                      ],
-                    ),
-                    backgroundColor: AppTheme.success,
-                    behavior: SnackBarBehavior.floating,
-                    margin: const EdgeInsets.all(16.0),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                );
-              }
-            } catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Row(
-                      children: [
-                        const Icon(Icons.error_outline, color: Colors.white),
-                        const SizedBox(width: 12),
-                        Expanded(child: Text('Failed to delete: $e')),
-                      ],
-                    ),
-                    backgroundColor: AppTheme.error.withValues(alpha: 0.9),
-                    behavior: SnackBarBehavior.floating,
-                    margin: const EdgeInsets.all(16.0),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                );
-              }
-            }
-          },
-          background: Container(
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 20),
-            decoration: BoxDecoration(
-              color: AppTheme.error,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(LucideIcons.trash2, color: Colors.white, size: 20),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              color: isWarning ? AppTheme.error.withValues(alpha: 0.05) : Colors.transparent,
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border(left: BorderSide(color: statusColor, width: 4)),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 48,
-                      child: Text(
-                        record.timeString,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: mainColor,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.displayName,
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.primaryDark,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(record.methodIcon, size: 12, color: subColor),
-                        const SizedBox(width: 4),
-                        Text(
-                          record.method,
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: subColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Row(
-                children: [
-                  Icon(
-                    record.isSuccess 
-                        ? Icons.check_circle_rounded 
-                        : (record.isError ? Icons.warning_amber_rounded : Icons.cancel_rounded),
-                    size: 14,
-                    color: statusColor,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    record.isSuccess 
-                        ? 'SUCCESS' 
-                        : (record.isError ? 'ERROR' : 'DENIED'),
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: statusColor,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-      ),
-      ),
-    );
-  }
-
-  Future<bool?> _showDeleteConfirmation(BuildContext context) async {
-    return showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surfaceContainerLowest,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(LucideIcons.alertTriangle, color: AppTheme.error, size: 24),
-            SizedBox(width: 12),
-            Text(
-              'Delete Entry',
-              style: TextStyle(
-                fontFamily: 'Hanken Grotesk',
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primary,
-              ),
-            ),
-          ],
-        ),
-        content: const Text(
-          'Delete this log entry? This action cannot be undone.',
-          style: TextStyle(fontFamily: 'Inter', color: AppTheme.onSurfaceVariant),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-              textStyle: const TextStyle(fontSize: 14.0, fontWeight: FontWeight.w600),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text('Cancel', style: TextStyle(color: AppTheme.outline)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.error,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-              textStyle: const TextStyle(fontSize: 14.0, fontWeight: FontWeight.w600),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SkeletonLoader extends StatelessWidget {
-  const _SkeletonLoader();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      itemCount: 4,
-      itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.3, end: 0.7),
-            duration: const Duration(milliseconds: 1000),
-            curve: Curves.easeInOutSine,
-            builder: (context, value, child) {
-              return Container(
-                height: 72,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppTheme.surfaceContainerLow.withValues(alpha: value),
-                      AppTheme.surfaceContainerLow.withValues(alpha: value + 0.1),
-                      AppTheme.surfaceContainerLow.withValues(alpha: value),
-                    ],
-                    stops: const [0.0, 0.5, 1.0],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-}

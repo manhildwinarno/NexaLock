@@ -235,13 +235,13 @@ nexalock/
 │   ├── models/
 │   │   └── user_model.dart          # User data model
 │   ├── screens/
-│   │   ├── login_screen.dart        # Auth & registration
-│   │   ├── home_screen.dart         # Dashboard & lock control
-│   │   ├── history_screen.dart      # Access audit logs
-│   │   ├── users_screen.dart        # User & RFID management
-│   │   ├── profile_screen.dart      # Profile, OTA, preferences
-│   │   ├── settings_screen.dart     # App settings & sign-out
-│   │   ├── notifications_screen.dart # Activity feed
+│   │   ├── login_screen.dart        # Auth & registration screen
+│   │   ├── home_screen.dart         # Dashboard & lock control screen
+│   │   ├── history_screen.dart      # Access audit log screen
+│   │   ├── users_screen.dart        # User & RFID management screen
+│   │   ├── profile_screen.dart      # Profile, OTA & preferences screen
+│   │   ├── settings_screen.dart     # App settings & sign-out screen
+│   │   ├── notifications_screen.dart # Activity notifications feed
 │   │   ├── main_nav_screen.dart     # Bottom navigation shell
 │   │   └── forgot_password_screen.dart
 │   ├── services/
@@ -250,8 +250,28 @@ nexalock/
 │   │   └── realtime_db_service.dart # RTDB IoT communication
 │   ├── theme/
 │   │   └── app_theme.dart           # Material 3 design tokens
-│   └── widgets/
-│       └── custom_avatar.dart       # Reusable avatar component
+│   └── widgets/                     # 🧱 Component Library (Extracted Modular Widgets)
+│       ├── central_status_indicator.dart # Animated lock status visualizer
+│       ├── action_pill_button.dart   # Central door lock/unlock pill button
+│       ├── quick_info_panel.dart     # Telemetry readout (Wi-Fi & battery)
+│       ├── log_item_tile.dart        # Slide-to-dismiss access log card
+│       ├── user_card_tile.dart       # User details card with quick action triggers
+│       ├── assign_card_sheet.dart    # RFID dynamic card scanning and attachment modal
+│       ├── device_o_t_a_card.dart     # Firmware version validation and upgrade interface
+│       ├── device_info_group.dart    # System firmware information module
+│       ├── quick_preferences_group.dart # Sound & notifications switch collection
+│       ├── preference_switch_tile.dart # Standardized profile toggler
+│       ├── info_row.dart             # Standardized label-value table row
+│       ├── filter_chips_row.dart     # Custom scrollable chip container
+│       ├── filter_chip.dart          # Segmented layout control element
+│       ├── dashboard_header.dart     # User greeting block with custom avatar navigation
+│       ├── custom_avatar.dart        # Stylized name abbreviation circle
+│       ├── search_bar.dart           # Standalone input field with text controller
+│       ├── section_heading.dart      # Formatted heading row for dashboards
+│       ├── security_alert_block.dart  # Prominent visual red card warning admins of breaches
+│       ├── skeleton_loader.dart      # General list shimmer loader
+│       ├── users_skeleton_loader.dart # Tabular management layout shimmer
+│       └── system_placeholder.dart   # Generic full-screen offline / empty visual state
 ├── android/
 │   └── app/
 │       └── google-services.json     # 🔒 GITIGNORED — Android Firebase config

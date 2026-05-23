@@ -4,6 +4,12 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../models/user_model.dart';
 import '../services/firestore_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/system_placeholder.dart';
+import '../widgets/activity_tile.dart';
+import '../widgets/security_alert_tile.dart';
+import '../widgets/filter_chip.dart';
+import '../widgets/filter_chips_row.dart';
+import '../widgets/notifications_app_bar.dart';
 
 /// Live Notifications Screen — role-based Firestore Access_Logs with name mapping
 class NotificationsScreen extends StatefulWidget {
@@ -30,9 +36,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const _NotificationsAppBar(),
+            const NotificationsAppBar(),
             const SizedBox(height: 8),
-            _FilterChipsRow(
+            FilterChipsRow(
               selectedFilter: _selectedFilter,
               onFilterChanged: _onFilterChanged,
             ),
@@ -223,7 +229,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               }).toList();
               
               if (docs.isEmpty) {
-                return const _SystemPlaceholder();
+                return const SystemPlaceholder();
               }
             }
 
@@ -253,13 +259,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 }
 
                 if (isDenied) {
-                  return _SecurityAlertTile(
+                  return SecurityAlertTile(
                     title: 'Security Alert',
                     description: 'Denied access via $method — $displayName',
                     timeAgo: timeAgo,
                   );
                 } else {
-                  return _ActivityTile(
+                  return ActivityTile(
                     title: 'Access Granted',
                     description: '$displayName via $method',
                     timeAgo: timeAgo,
@@ -292,304 +298,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 }
 
 /// Top Application Bar tailored for the Notifications screen
-class _NotificationsAppBar extends StatelessWidget {
-  const _NotificationsAppBar();
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_rounded),
-            color: AppTheme.primary,
-            splashRadius: 24,
-            tooltip: 'Back',
-          ),
-          const Text(
-            'Notifications',
-            style: TextStyle(
-              fontFamily: 'Hanken Grotesk',
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.primary,
-            ),
-          ),
-          const SizedBox(width: 48), // Balance the back button
-        ],
-      ),
-    );
-  }
-}
 
 /// Horizontal scrollable row of filter chips
-class _FilterChipsRow extends StatelessWidget {
-  final String selectedFilter;
-  final ValueChanged<String> onFilterChanged;
 
-  const _FilterChipsRow({
-    required this.selectedFilter,
-    required this.onFilterChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final filters = ['All', 'Security', 'System'];
-    
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: filters.map((filter) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: _FilterChip(
-              label: filter,
-              isActive: selectedFilter == filter,
-              onTap: () => onFilterChanged(filter),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-}
 
 /// Custom Shadcn-styled pill chip
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
 
-  const _FilterChip({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? AppTheme.secondary : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          border: isActive ? Border.all(color: AppTheme.secondary) : Border.all(color: AppTheme.outlineVariant.withValues(alpha: 0.5)),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: isActive ? AppTheme.onSecondary : AppTheme.onSurfaceVariant,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// Critical Red alert tile for unauthorized access
-class _SecurityAlertTile extends StatelessWidget {
-  final String title;
-  final String description;
-  final String timeAgo;
 
-  const _SecurityAlertTile({
-    required this.title,
-    required this.description,
-    required this.timeAgo,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.errorContainer,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.error.withValues(alpha: 0.1)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: const BoxDecoration(
-              color: AppTheme.error,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.warning_rounded, color: Colors.white, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 15,
-                      color: AppTheme.onErrorContainer,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: '$title: ',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(
-                        text: description,
-                        style: const TextStyle(fontWeight: FontWeight.w400),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  timeAgo,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.onErrorContainer.withValues(alpha: 0.8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 /// Standard activity tile for successful access events
-class _ActivityTile extends StatelessWidget {
-  final String title;
-  final String description;
-  final String timeAgo;
-  final String status;
 
-  const _ActivityTile({
-    required this.title,
-    required this.description,
-    required this.timeAgo,
-    required this.status,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: AppTheme.subtleShadow,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppTheme.success.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.check_circle_rounded, color: AppTheme.success, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 15,
-                      color: AppTheme.onSurface,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: '$title: ',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(
-                        text: description,
-                        style: const TextStyle(fontWeight: FontWeight.w400),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  timeAgo,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 /// Placeholder for System tab when no system alerts exist
-class _SystemPlaceholder extends StatelessWidget {
-  const _SystemPlaceholder();
 
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              LucideIcons.server,
-              size: 48,
-              color: AppTheme.outlineVariant,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'All Systems Normal',
-              style: TextStyle(
-                fontFamily: 'Hanken Grotesk',
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'No system alerts at this time.\nDevice connectivity and hardware stats are nominal.',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                color: AppTheme.outline,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+

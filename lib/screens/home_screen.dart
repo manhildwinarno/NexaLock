@@ -10,6 +10,10 @@ import '../theme/app_theme.dart';
 import '../widgets/custom_avatar.dart';
 import 'notifications_screen.dart';
 import 'profile_screen.dart';
+import '../widgets/quick_info_panel.dart';
+import '../widgets/action_pill_button.dart';
+import '../widgets/central_status_indicator.dart';
+import '../widgets/dashboard_header.dart';
 
 /// Phase 3 IoT Dashboard Screen — connected to Firebase RTDB
 class HomeScreen extends StatefulWidget {
@@ -229,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen>
           child: Column(
             children: [
               const SizedBox(height: 24),
-              _DashboardHeader(user: widget.user),
+              DashboardHeader(user: widget.user),
               const SizedBox(height: 32),
               Expanded(
                 child: StreamBuilder<DatabaseEvent>(
@@ -292,19 +296,19 @@ class _HomeScreenState extends State<HomeScreen>
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _CentralStatusIndicator(
+                        CentralStatusIndicator(
                           isLocked: _isLocked,
                           isPending: _isCommandPending,
                           onToggle: _toggleLock,
                         ),
                         const SizedBox(height: 48),
-                        _ActionPillButton(
+                        ActionPillButton(
                           isLocked: _isLocked,
                           isPending: _isCommandPending,
                           onToggle: _toggleLock,
                         ),
                         const SizedBox(height: 40),
-                        _QuickInfoPanel(isDeviceOffline: _isDeviceOffline),
+                        QuickInfoPanel(isDeviceOffline: _isDeviceOffline),
                       ],
                     );
                   },
@@ -320,410 +324,13 @@ class _HomeScreenState extends State<HomeScreen>
 }
 
 /// Header bar rendering the role-aware greeting, portrait avatar, and notification actions
-class _DashboardHeader extends StatelessWidget {
-  final UserModel user;
 
-  const _DashboardHeader({required this.user});
-
-  @override
-  Widget build(BuildContext context) {
-    final firstName = user.name.split(' ').first;
-    final greeting = user.isAdmin ? 'Welcome, $firstName' : 'Hello, $firstName';
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ProfileScreen(user: user),
-                  ),
-                );
-              },
-              borderRadius: BorderRadius.circular(18),
-              child: CustomAvatar(name: user.name, size: 36, fontSize: 14),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              greeting,
-              style: const TextStyle(
-                fontFamily: 'Hanken Grotesk',
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primary,
-              ),
-            ),
-          ],
-        ),
-        IconButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => NotificationsScreen(user: user),
-              ),
-            );
-          },
-          icon: const Icon(Icons.notifications_none_rounded),
-          color: AppTheme.onSurfaceVariant,
-          tooltip: 'Notifications',
-          constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-        ),
-      ],
-    );
-  }
-}
-
-class _CentralStatusIndicator extends StatefulWidget {
-  final bool isLocked;
-  final bool isPending;
-  final VoidCallback onToggle;
-
-  const _CentralStatusIndicator({
-    required this.isLocked,
-    this.isPending = false,
-    required this.onToggle,
-  });
-
-  @override
-  State<_CentralStatusIndicator> createState() => _CentralStatusIndicatorState();
-}
-
-class _CentralStatusIndicatorState extends State<_CentralStatusIndicator> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final statusColor = widget.isPending
-        ? AppTheme.outline
-        : (widget.isLocked ? AppTheme.error : AppTheme.success);
-
-    return GestureDetector(
-      onTapDown: (_) {
-        setState(() => _isPressed = true);
-        HapticFeedback.mediumImpact();
-      },
-      onTapUp: (_) {
-        setState(() => _isPressed = false);
-        widget.onToggle();
-      },
-      onTapCancel: () => setState(() => _isPressed = false),
-      child: AnimatedScale(
-        scale: _isPressed ? 0.95 : 1.0,
-        duration: AppTheme.durationFast,
-        curve: AppTheme.curveSpring,
-        child: AnimatedContainer(
-          duration: AppTheme.durationMedium,
-          curve: AppTheme.curveStandard,
-          width: 256,
-          height: 256,
-          decoration: BoxDecoration(
-            color: AppTheme.surfaceContainerLowest,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 30,
-                offset: const Offset(0, 8),
-              ),
-            ],
-            border: Border.all(
-              color: statusColor,
-              width: 2.5,
-            ),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Core info mapping
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedSwitcher(
-                    duration: AppTheme.durationMedium,
-                    transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: ScaleTransition(scale: animation, child: child)),
-                    child: widget.isPending
-                        ? const SizedBox(
-                            width: 48,
-                            height: 48,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3,
-                              color: AppTheme.outline,
-                            ),
-                          )
-                        : Icon(
-                            widget.isLocked ? Icons.lock_rounded : Icons.lock_open_rounded,
-                            key: ValueKey(widget.isLocked),
-                            size: 48,
-                            color: statusColor,
-                          ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    widget.isPending
-                        ? 'Processing...'
-                        : (widget.isLocked ? 'Door Locked' : 'Door Unlocked'),
-                    style: TextStyle(
-                      fontFamily: 'Hanken Grotesk',
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: statusColor,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Front Entrance',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// Highly optimized primary action pill extracting interaction mapping
-class _ActionPillButton extends StatelessWidget {
-  final bool isLocked;
-  final bool isPending;
-  final VoidCallback onToggle;
 
-  const _ActionPillButton({
-    required this.isLocked,
-    this.isPending = false,
-    required this.onToggle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: isPending ? null : onToggle,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.primary, // #001F3F Foundation
-        foregroundColor: AppTheme.onPrimary,
-        disabledBackgroundColor: AppTheme.primary.withValues(alpha: 0.5),
-        disabledForegroundColor: AppTheme.onPrimary.withValues(alpha: 0.7),
-        elevation: 4,
-        shadowColor: const Color(0x33000613), // 20% opacity primaryDark
-        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(100), // Full Pill configuration
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (isPending)
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white70,
-              ),
-            )
-          else
-            Icon(
-              isLocked ? Icons.lock_open_rounded : Icons.lock_rounded,
-              size: 24,
-            ),
-          const SizedBox(width: 12),
-          Text(
-            isPending ? 'Sending...' : (isLocked ? 'Unlock Door' : 'Lock Door'),
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 /// Glassmorphism translucent container with live RTDB Wi-Fi and Battery readouts
 /// Includes a 35-second heartbeat watchdog: if the ESP32 stops sending telemetry,
 /// the panel overrides stale data with an explicit "Offline" state.
-class _QuickInfoPanel extends StatefulWidget {
-  final bool isDeviceOffline;
-  
-  const _QuickInfoPanel({required this.isDeviceOffline});
 
-  @override
-  State<_QuickInfoPanel> createState() => _QuickInfoPanelState();
-}
 
-class _QuickInfoPanelState extends State<_QuickInfoPanel>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
-
-  final RealtimeDbService _rtdb = RealtimeDbService();
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppTheme.outlineVariant.withValues(alpha: 0.3)),
-        boxShadow: AppTheme.subtleShadow,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          // Wi-Fi Readout Block — live from RTDB with offline override
-          StreamBuilder<String>(
-            stream: _rtdb.deviceWifiStream,
-            builder: (context, snapshot) {
-              final wifi = widget.isDeviceOffline ? 'Offline' : (snapshot.data ?? 'N/A');
-              final isOffline = wifi == 'Offline';
-              
-              IconData wifiIcon = Icons.wifi_rounded;
-              if (isOffline) {
-                wifiIcon = Icons.wifi_off_rounded;
-              } else if (wifi == 'Fair') {
-                wifiIcon = Icons.wifi_2_bar_rounded;
-              } else if (wifi == 'Weak') {
-                wifiIcon = Icons.wifi_1_bar_rounded;
-              }
-
-              return Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd), // rounded-xl
-                    ),
-                    child: Icon(
-                      wifiIcon,
-                      color: isOffline ? AppTheme.outline : AppTheme.secondary,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        wifi,
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: isOffline ? AppTheme.outline : AppTheme.primary,
-                        ),
-                      ),
-                      const Text(
-                        'Wi-Fi Signal',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            },
-          ),
-          // Sub-divider mapping
-          Container(
-            height: 40,
-            width: 1,
-            color: AppTheme.outlineVariant.withValues(alpha: 0.3),
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-          ),
-          // Battery Readout Block — live from RTDB with offline override
-          StreamBuilder<String>(
-            stream: _rtdb.deviceBatteryStream,
-            builder: (context, snapshot) {
-              final battery = widget.isDeviceOffline ? 'N/A' : (snapshot.data ?? 'N/A');
-              final isOffline = widget.isDeviceOffline;
-
-              IconData batteryIcon = Icons.battery_5_bar_rounded;
-              Color batteryColor = AppTheme.secondary;
-              
-              if (isOffline || battery == 'N/A') {
-                batteryIcon = Icons.battery_unknown_rounded;
-                batteryColor = AppTheme.outline;
-              } else {
-                final int batteryLevel = int.tryParse(battery.replaceAll('%', '')) ?? 0;
-                if (batteryLevel > 75) {
-                  batteryIcon = Icons.battery_5_bar_rounded;
-                } else if (batteryLevel > 50) {
-                  batteryIcon = Icons.battery_4_bar_rounded;
-                } else if (batteryLevel > 25) {
-                  batteryIcon = Icons.battery_2_bar_rounded;
-                } else {
-                  batteryIcon = Icons.battery_1_bar_rounded;
-                  batteryColor = AppTheme.error;
-                }
-              }
-
-              return Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd), // rounded-xl
-                    ),
-                    child: Icon(
-                      batteryIcon,
-                      color: batteryColor,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        battery,
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: isOffline ? AppTheme.outline : AppTheme.primary,
-                        ),
-                      ),
-                      const Text(
-                        'Battery Level',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
