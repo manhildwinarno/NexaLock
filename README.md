@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/images/nexalock-icon.png" alt="NexaLock Logo" width="120" />
+  <img src="assets/images/nexalock-icon.webp" alt="NexaLock Logo" width="120" />
 </p>
 
 <h1 align="center">NexaLock</h1>
