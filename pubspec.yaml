@@ -58,16 +58,16 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/nexalock-icon.png"
+  image_path: "assets/images/nexalock-icon.webp"
   web:
     generate: true
-    image_path: "assets/images/nexalock-icon.png"
+    image_path: "assets/images/nexalock-icon.webp"
   windows:
     generate: true
-    image_path: "assets/images/nexalock-icon.png"
+    image_path: "assets/images/nexalock-icon.webp"
   macos:
     generate: true
-    image_path: "assets/images/nexalock-icon.png"
+    image_path: "assets/images/nexalock-icon.webp"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

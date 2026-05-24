@@ -26,8 +26,10 @@ class ProfileHeader extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(width: 28), // Balance for the edit button to center the text
             Text(
               user.name,
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: 'Hanken Grotesk',
                 fontSize: 24,

@@ -58,7 +58,7 @@ class SettingsList extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                'assets/images/nexalock-icon.png',
+                'assets/images/nexalock-icon.webp',
                 width: 64,
                 height: 64,
                 fit: BoxFit.contain,

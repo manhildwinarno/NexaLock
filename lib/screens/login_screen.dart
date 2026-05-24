@@ -179,7 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   // Logo & Brand Header
                   Image.asset(
-                    'assets/images/nexalock-icon.png',
+                    'assets/images/nexalock-icon.webp',
                     width: 80,
                     height: 80,
                     fit: BoxFit.contain,
